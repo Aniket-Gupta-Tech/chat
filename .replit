@@ -47,7 +47,7 @@ CLIENT_URL = "*"
 JWT_EXPIRE = "7d"
 MAX_FILE_SIZE = "20971520"
 NODE_ENV = "development"
-UPLOAD_PATH = "artifacts/api-server/uploads"
+UPLOAD_PATH = "uploads"
 
 [userenv.development]
 JWT_SECRET = "dev_jwt_secret_change_in_production_abc123xyz"
