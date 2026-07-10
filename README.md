@@ -4,32 +4,27 @@ A production-ready, WhatsApp Web-style real-time chat application with 1-on-1 me
 
 ---
 
-## ▶ Run Locally in VS Code
+## ▶ Run Locally
+
+This is a single Node.js project — one `.env`, one server, one port. No separate frontend/backend folders to juggle.
 
 ### Prerequisites
 
 | Tool | Minimum version | Download |
 |------|----------------|---------|
 | Node.js | 18 | https://nodejs.org |
-| pnpm | 8 | `npm i -g pnpm` |
 
 ### Step 1 — Clone & install dependencies
 
 ```bash
 git clone <your-repo-url>
 cd <project-folder>
-pnpm install --force
+npm install
 ```
-
-> `--force` ensures platform-specific native binaries (esbuild, rollup) are downloaded for your OS and CPU architecture.
 
 ### Step 2 — Create your `.env` file
 
-```bash
-cp .env.example .env
-```
-
-Open `.env` and fill in your values:
+Create a `.env` file in the project root:
 
 ```env
 # Required — get a free cluster at https://www.mongodb.com/atlas
@@ -42,41 +37,48 @@ JWT_SECRET=replace_with_a_long_random_string_min_32_chars
 JWT_EXPIRE=7d
 PORT=8080
 NODE_ENV=development
-CLIENT_URL=http://localhost:5173
 ```
 
-### Step 3 — Start everything
+### Step 3 — Start the project
 
 ```bash
 node server.js
 ```
 
-That's it. One command starts both servers:
+That's it — **one command, one server, one port**. It builds the React frontend automatically (first run only) and then serves everything — API, Socket.IO, and the app itself — from `http://localhost:8080`.
 
-| Service | URL |
-|---------|-----|
-| **Frontend** (React + Vite) | http://localhost:5173 |
-| **Backend** (Express + Socket.IO) | http://localhost:8080 |
+Open **http://localhost:8080** in your browser.
 
-Open **http://localhost:5173** in your browser. All `/api/*` calls are proxied automatically from Vite to the backend — no CORS issues, no extra config.
+Press **Ctrl+C** to stop.
 
-Press **Ctrl+C** to stop both servers cleanly.
+If you change frontend code in `client/src`, rebuild with `npm run build` (or delete the `dist/` folder and restart `node server.js` — it rebuilds automatically).
 
 ### Troubleshooting
 
 | Problem | Fix |
 |---------|-----|
-| `vite binary not found` | Run `pnpm install --force` |
-| `node_modules not found` | Run `pnpm install --force` |
+| `node_modules not found` | Run `npm install` |
 | MongoDB connection fails | Check `MONGO_URI` in `.env` — the app still starts but DB routes will fail |
-| Port 8080 or 5173 in use | Change `PORT=8081` in `.env`; for Vite edit `vite.config.local.js` |
+| Port 8080 in use | Set `PORT=8081` in `.env` |
 | Node version error | Install Node 18+ from https://nodejs.org |
+| Frontend changes not showing | Run `npm run build`, or delete `dist/` and restart `node server.js` |
+
+---
+
+## Deploying (Vercel, Render, etc.)
+
+Since this is a plain single Node.js app now, deployment config is simple:
+
+- **Build command:** `npm run build`
+- **Start command:** `node server.js` (or `npm start`)
+- **Root directory:** repo root (no subfolder)
+- **Environment variables:** set `MONGO_URI`, `JWT_SECRET`, `JWT_EXPIRE`, `PORT` (most platforms set `PORT` for you), `NODE_ENV=production`
 
 ---
 
 ## Replit
 
-On Replit the backend and frontend start automatically via managed workflows. Set `MONGO_URI` as a Replit Secret (key = `MONGO_URI`).
+On Replit the app starts automatically via the `Server` workflow (`node server.js`). Set `MONGO_URI` as a Replit Secret if not already configured.
 
 ---
 
@@ -137,7 +139,7 @@ On Replit the backend and frontend start automatically via managed workflows. Se
 | Backend | Node.js, Express.js, Socket.IO |
 | Database | MongoDB + Mongoose |
 | Auth | JWT (localStorage) |
-| File Storage | Local disk (`artifacts/api-server/uploads/`) |
+| File Storage | Local disk (`uploads/`) |
 | Security | Helmet, express-rate-limit, express-mongo-sanitize, bcryptjs |
 
 ---
@@ -145,26 +147,29 @@ On Replit the backend and frontend start automatically via managed workflows. Se
 ## Project Structure
 
 ```
-artifacts/
-  api-server/            # Express + Socket.IO backend (JavaScript)
-    src/
-      config/            # MongoDB connection
-      models/            # Mongoose models (User, Message, ChatRoom, File, ConnectionRequest)
-      routes/            # Express route handlers
-      controllers/       # Business logic
-      middleware/        # Auth (JWT), file upload (Multer), security
-      sockets/           # Socket.IO event handlers
-      services/          # Code generation (2-digit MFA), socket service
-      utils/             # JWT helpers
-    uploads/             # Uploaded files (auto-created)
+server.js               # Single entry point — Express + Socket.IO + serves the built frontend
+.env                     # Single env file (root only)
 
-  chat-app/              # React + Vite frontend (JavaScript / JSX)
-    src/
-      contexts/          # AuthContext, SocketContext, ChatContext
-      services/          # Axios API client
-      hooks/             # useAuth, useSocket, useChat
-      pages/             # LoginPage, ChatPage
-      components/        # Sidebar, ChatWindow, MessageBubble, file/connection components
+src/                     # Backend (Express, plain ESM)
+  config/                # MongoDB connection
+  models/                # Mongoose models (User, Message, ChatRoom, File, ConnectionRequest)
+  routes/                # Express route handlers
+  controllers/           # Business logic
+  middleware/            # Auth (JWT), file upload (Multer), security
+  sockets/               # Socket.IO event handlers
+  services/              # Code generation (2-digit MFA), socket service
+  utils/                 # JWT helpers
+
+client/                  # React + Vite frontend (built into dist/)
+  src/
+    contexts/            # AuthContext, SocketContext, ChatContext
+    services/            # Axios API client
+    hooks/               # useAuth, useSocket, useChat
+    pages/               # LoginPage, ChatPage
+    components/          # Sidebar, ChatWindow, MessageBubble, file/connection components
+
+dist/                    # Built frontend static assets (generated, gitignored)
+uploads/                 # Uploaded files (auto-created)
 ```
 
 ---
@@ -257,7 +262,7 @@ artifacts/
 | `JWT_SECRET` | JWT signing secret | Set in dev env |
 | `JWT_EXPIRE` | JWT expiry duration | `7d` |
 | `CLIENT_URL` | Allowed CORS origin | `*` |
-| `UPLOAD_PATH` | Upload directory path | `artifacts/api-server/uploads` |
+| `UPLOAD_PATH` | Upload directory path | `uploads` |
 | `MAX_FILE_SIZE` | Max upload size in bytes | `20971520` (20MB) |
 | `PORT` | Server port | `8080` |
 

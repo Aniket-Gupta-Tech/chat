@@ -1,0 +1,1 @@
+- [Single-Node consolidation](single-node-consolidation.md) — this project was deliberately migrated off Replit's multi-artifact/pnpm-workspace layout into one plain Node.js app.
