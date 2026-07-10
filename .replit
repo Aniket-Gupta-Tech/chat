@@ -1,0 +1,32 @@
+modules = ["nodejs-24"]
+
+[deployment]
+router = "application"
+deploymentTarget = "autoscale"
+
+[deployment.postBuild]
+args = ["pnpm", "store", "prune"]
+env = { "CI" = "true" }
+
+[workflows]
+runButton = "Project"
+
+[agent]
+stack = "PNPM_WORKSPACE"
+expertMode = true
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 20000
+
+[userenv]
+
+[userenv.shared]
+CLIENT_URL = "*"
+JWT_EXPIRE = "7d"
+MAX_FILE_SIZE = "20971520"
+NODE_ENV = "development"
+UPLOAD_PATH = "artifacts/api-server/uploads"
+
+[userenv.development]
+JWT_SECRET = "dev_jwt_secret_change_in_production_abc123xyz"
