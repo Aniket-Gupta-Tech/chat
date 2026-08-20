@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 
-const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
+const MAX_FILE_SIZE = 900 * 1024 * 1024; // 100 MB
 
 export default function ChatWindow() {
   const {
@@ -29,14 +29,14 @@ export default function ChatWindow() {
   const [uploading, setUploading] = useState(false);
   const [showReconnect, setShowReconnect] = useState(false);
 
-  const messagesEndRef   = useRef(null);
-  const fileInputRef     = useRef(null);
+  const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
-  const room             = rooms.find((r) => r.roomId === activeRoomId);
-  const messages         = messagesByRoom[activeRoomId] || [];
+  const room = rooms.find((r) => r.roomId === activeRoomId);
+  const messages = messagesByRoom[activeRoomId] || [];
   const otherParticipant = room?.participants.find((p) => p._id !== user._id);
-  const isOtherTyping    = typingStates[activeRoomId]?.[otherParticipant?._id];
+  const isOtherTyping = typingStates[activeRoomId]?.[otherParticipant?._id];
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -81,7 +81,7 @@ export default function ChatWindow() {
     if (!file) return;
 
     if (file.size > MAX_FILE_SIZE) {
-      toast({ title: 'File too large', description: 'Maximum file size is 100 MB', variant: 'destructive' });
+      toast({ title: 'File too large', description: 'Maximum file size is 900 MB', variant: 'destructive' });
       e.target.value = '';
       return;
     }
@@ -181,7 +181,7 @@ export default function ChatWindow() {
         </div>
 
         {messages.map((msg, idx) => {
-          const isMine  = msg.senderId?._id === user._id || msg.senderId === user._id;
+          const isMine = msg.senderId?._id === user._id || msg.senderId === user._id;
           const showDate =
             idx === 0 ||
             new Date(msg.createdAt).toDateString() !== new Date(messages[idx - 1].createdAt).toDateString();
