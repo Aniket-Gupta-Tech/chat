@@ -44,9 +44,24 @@ export function ChatProvider({ children }) {
         const roomMessages = prev[message.roomId] || [];
         // Avoid duplicate messages
         if (roomMessages.some(m => m._id === message._id)) return prev;
+
+        // Replace the matching optimistic message if found
+        let replaced = false;
+        const newMessages = roomMessages.map(m => {
+          if (!replaced && typeof m._id === 'string' && m._id.startsWith('temp-') && m.content === message.content && m.type === message.type) {
+            replaced = true;
+            return message;
+          }
+          return m;
+        });
+
+        if (!replaced) {
+          newMessages.push(message);
+        }
+
         return {
           ...prev,
-          [message.roomId]: [...roomMessages, message]
+          [message.roomId]: newMessages
         };
       });
 

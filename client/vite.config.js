@@ -20,4 +20,12 @@ export default defineConfig({
     outDir: path.resolve(__dirname, '..', 'dist'),
     emptyOutDir: true,
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      }
+    }
+  }
 });

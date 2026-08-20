@@ -38,7 +38,7 @@ const BLOCKED_EXTENSIONS = [
   '.dll', '.vbs', '.jar', '.com', '.scr',
 ];
 
-const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE || '2147483648', 2147483648); // 200MB default
+const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE || '209715200', 10); // 200MB default
 
 export const uploadDir = path.resolve(process.env.UPLOAD_PATH || 'uploads');
 if (!fs.existsSync(uploadDir)) {
