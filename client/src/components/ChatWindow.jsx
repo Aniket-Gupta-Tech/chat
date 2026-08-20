@@ -7,6 +7,7 @@ import { useSocket } from '../hooks/useSocket';
 import api from '../services/api';
 import MessageBubble from './MessageBubble';
 import ConnectUserDialog from './ConnectUserDialog';
+import CodeSnippetDialog from './CodeSnippetDialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
@@ -28,6 +29,7 @@ export default function ChatWindow() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [showReconnect, setShowReconnect] = useState(false);
+  const [showCodeDialog, setShowCodeDialog] = useState(false);
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -72,6 +74,11 @@ export default function ChatWindow() {
     clearTimeout(typingTimeoutRef.current);
     setIsTyping(false);
     socket.emit('typing_stop', { roomId: activeRoomId });
+  };
+
+  const handleSendCode = (codeData) => {
+    if (!room.active) return;
+    sendMessage(activeRoomId, JSON.stringify(codeData), otherParticipant._id, 'code');
   };
 
   // ── File upload ───────────────────────────────────────────────────────────
@@ -254,6 +261,16 @@ export default function ChatWindow() {
             <Paperclip size={20} className={uploading ? 'animate-pulse' : ''} />
           </Button>
 
+          <Button
+            variant="ghost" size="icon"
+            className="shrink-0 text-muted-foreground"
+            onClick={() => setShowCodeDialog(true)}
+            disabled={uploading}
+            title="Share Code Snippet"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-code"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          </Button>
+
           <form onSubmit={handleSend} className="flex-1 flex bg-secondary rounded-lg overflow-hidden">
             <input
               type="text"
@@ -298,6 +315,13 @@ export default function ChatWindow() {
           onClose={() => setShowReconnect(false)}
         />
       )}
+
+      {/* ── Code Snippet Dialog ────────────────────────────────────────── */}
+      <CodeSnippetDialog
+        isOpen={showCodeDialog}
+        onClose={() => setShowCodeDialog(false)}
+        onSubmit={handleSendCode}
+      />
     </div>
   );
 }

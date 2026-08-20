@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { Check, CheckCheck, FileText, Download, FileArchive, Video, X } from 'lucide-react';
+import { Check, CheckCheck, FileText, Download, FileArchive, Video, X, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { useToast } from '@/hooks/use-toast';
 
 const token = () => localStorage.getItem('token') || '';
 
@@ -41,6 +44,7 @@ function ImageLightbox({ src, alt, onClose }) {
 
 export default function MessageBubble({ message, isMine }) {
   const [lightbox, setLightbox] = useState(false);
+  const { toast } = useToast();
   const time = new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   const renderContent = () => {
@@ -55,8 +59,41 @@ export default function MessageBubble({ message, isMine }) {
       return <p className="text-sm italic text-destructive">Error loading attachment</p>;
     }
 
-    if (!fileData?.fileId) {
+    if (!fileData?.fileId && message.type !== 'code') {
       return <p className="text-sm italic text-destructive">Attachment unavailable</p>;
+    }
+
+    // ── Code Snippet ───────────────────────────────────────────────────
+    if (message.type === 'code') {
+      const handleCopy = () => {
+        navigator.clipboard.writeText(fileData.code);
+        toast({ title: 'Code copied to clipboard!' });
+      };
+      return (
+        <div className="relative group max-w-full overflow-hidden rounded-md bg-[#1E1E1E] border border-border">
+          <div className="flex items-center justify-between px-3 py-1 bg-black/40 border-b border-white/10 text-xs text-muted-foreground">
+            <span>{fileData.language}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-white"
+              onClick={handleCopy}
+              title="Copy code"
+            >
+              <Copy size={14} />
+            </Button>
+          </div>
+          <div className="overflow-x-auto text-sm max-h-[400px]">
+            <SyntaxHighlighter
+              language={fileData.language}
+              style={vscDarkPlus}
+              customStyle={{ margin: 0, padding: '1rem', background: 'transparent' }}
+            >
+              {fileData.code}
+            </SyntaxHighlighter>
+          </div>
+        </div>
+      );
     }
 
     // ── Image ──────────────────────────────────────────────────────────
