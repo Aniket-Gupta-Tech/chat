@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 
-const MAX_FILE_SIZE = 200 * 1024 * 1024; // 100 MB
+const MAX_FILE_SIZE = 300 * 1024 * 1024; // 300 MB
 
 export default function ChatWindow() {
   const {
@@ -88,7 +88,7 @@ export default function ChatWindow() {
     if (!file) return;
 
     if (file.size > MAX_FILE_SIZE) {
-      toast({ title: 'File too large', description: 'Maximum file size is 200 MB', variant: 'destructive' });
+      toast({ title: 'File too large', description: 'Maximum file size is 300 MB', variant: 'destructive' });
       e.target.value = '';
       return;
     }
