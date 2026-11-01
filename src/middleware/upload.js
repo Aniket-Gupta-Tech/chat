@@ -38,12 +38,21 @@ const BLOCKED_EXTENSIONS = [
   '.dll', '.vbs', '.jar', '.com', '.scr',
 ];
 
-const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE || '314572800', 10); // 300MB default
+export const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE || '314572800', 10); // 300MB default
+export const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB per chunk for resumable uploads
 
 export const uploadDir = path.resolve(process.env.UPLOAD_PATH || 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+export const tmpUploadDir = path.join(uploadDir, 'tmp');
+fs.mkdirSync(tmpUploadDir, { recursive: true });
+
+// Returns an error message if the file is not allowed, otherwise null
+export const validateFileMeta = (originalName, mimeType) => {
+  const ext = path.extname(originalName).toLowerCase();
+  if (BLOCKED_EXTENSIONS.includes(ext)) return `File type ${ext} is not allowed for security reasons`;
+  if (!ALLOWED_EXTENSIONS.includes(ext)) return `File type ${ext} is not supported`;
+  if (!ALLOWED_TYPES.includes(mimeType)) return `MIME type ${mimeType} is not allowed`;
+  return null;
+};
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadDir),
@@ -54,19 +63,9 @@ const storage = multer.diskStorage({
   },
 });
 
-const fileFilter = (req, file, cb) => {
-  const ext = path.extname(file.originalname).toLowerCase();
-
-  if (BLOCKED_EXTENSIONS.includes(ext)) {
-    return cb(new Error(`File type ${ext} is not allowed for security reasons`), false);
-  }
-  if (!ALLOWED_EXTENSIONS.includes(ext)) {
-    return cb(new Error(`File type ${ext} is not supported`), false);
-  }
-  if (!ALLOWED_TYPES.includes(file.mimetype)) {
-    return cb(new Error(`MIME type ${file.mimetype} is not allowed`), false);
-  }
-
+const fileFilter = (_req, file, cb) => {
+  const error = validateFileMeta(file.originalname, file.mimetype);
+  if (error) return cb(new Error(error), false);
   cb(null, true);
 };
 

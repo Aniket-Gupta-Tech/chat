@@ -5,6 +5,7 @@ import { useChat } from '../hooks/useChat';
 import { useAuth } from '../hooks/useAuth';
 import { useSocket } from '../hooks/useSocket';
 import api from '../services/api';
+import { uploadFileChunked } from '../services/chunkedUpload';
 import MessageBubble from './MessageBubble';
 import ConnectUserDialog from './ConnectUserDialog';
 import CodeSnippetDialog from './CodeSnippetDialog';
@@ -93,21 +94,17 @@ export default function ChatWindow() {
       return;
     }
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('receiverId', otherParticipant._id);
-
     setUploading(true);
     setUploadProgress(0);
 
     try {
-      const res = await api.post(`/files/upload/${activeRoomId}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        onUploadProgress: (evt) => {
-          setUploadProgress(Math.round((evt.loaded * 100) / evt.total));
-        },
+      const res = await uploadFileChunked({
+        file,
+        roomId: activeRoomId,
+        receiverId: otherParticipant._id,
+        onProgress: setUploadProgress,
       });
-      if (res.data.message) addMessage(activeRoomId, res.data.message);
+      if (res.message) addMessage(activeRoomId, res.message);
     } catch (err) {
       const msg = err.response?.data?.error || err.message || 'Upload failed';
       toast({ title: 'Upload failed', description: msg, variant: 'destructive' });
